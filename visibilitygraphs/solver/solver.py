@@ -1,6 +1,11 @@
 import numpy as np
 import pyvista as pv
 from visibilitygraphs.models import DubinsPath
+"""
+Authors
+-------
+Collin Hague : chague@uncc.edu
+"""
 
 class Solver:
     """

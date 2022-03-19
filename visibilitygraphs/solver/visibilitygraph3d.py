@@ -6,18 +6,57 @@ from visibilitygraphs.dubinspath import VanaAirplane
 import pyvista as pv
 import numpy as np
 import heapq
+"""
+solves 3d path planning with obsticles for dubins airplane
 
+Authors
+-------
+Collin Hague : chague@uncc.edu
+
+References
+----------
+D’Amato, E., Notaro, I., Blasi, L., &#38; Mattei, M. (2019). Smooth path planning for fixed-wing aircraft in 3D environment using a layered essential visibility graph. 2019 International Conference on Unmanned Aircraft Systems, ICUAS 2019, 9–18. https://doi.org/10.1109/ICUAS.2019.8797929
+"""
 
 APPROX_ZERO = .0001
 
 class VisibilityGraph3D(Solver):
-    def __init__(self, numLevelSets, inflateFactor):
+    """
+    Solves the dubins airplane problem between two points while avoiding obsticles using visibility graphs
+    
+    Methods
+    -------
+    __init__(numLevelSets: int, inflateFactor: float): VisibilityGraph3D
+    solve(q0: ndarray, q1: ndarray, radius: float, flightAngle: float, environment: PolyData): list[DubinsPath]
+    branchAndBound(start: Vertex, end: Vertex, vertices: list[Vertex], costMatrix: ndarray, costFunction: Callable[[ndarray, ndarray], float]): list[Vertex]
+    findHeadings(vertices: list[Vertex], radius: float, flightAngle: float): list[Vertex]
+    bisectAnglePerpendicular(a: Vertex, b: Vertex, c: Vertex, flightAngle)
+    vectorAngle(vector: ndarray): tuple[[float, float]]
+    makeGraph(start: ndarray, end: ndarray, environment: PolyData, levelSets: ndarray, inflateRadius: float, costFunction: Callable[[ndarray, ndarray], float]): tuple[list[Vertex], ndarray]
+    """
+    def __init__(self, numLevelSets: int, inflateFactor: float):
+        """
+        Parameters
+        ----------
+        numLevelSets: int
+            number of z altitude slices to make
+        inflateFactor: float
+            distance from obsticles / turn radius
+        """
         self.numLevelSets = numLevelSets
         self.inflateFactor = inflateFactor
         self.dubins = VanaAirplane()
 
     def solve(self, q0: np.ndarray, q1: np.ndarray, radius: float, flightAngle: float, environment: pv.PolyData) -> 'list[DubinsPath]':
+        """
+        Raises
+        ------
+        NoPathFoundException: no valid paths are found
 
+        References
+        ----------
+        see visibilitygraphs.solver.Solver for more
+        """
         def modifiedDistance(a , b):
             """calculate best path based on flight angle"""
             dz = abs(b[0, 2] - a[0, 2])
@@ -31,7 +70,7 @@ class VisibilityGraph3D(Solver):
 
         validPath = False
         while not validPath:
-            sequence = self.branchAndBound(vertices[0], vertices[1], vertices, costMatrix)
+            sequence = self.branchAndBound(vertices[0], vertices[1], vertices, costMatrix, modifiedDistance)
             if np.isinf(end.cost):
                 raise NoPathFoundException()
 
@@ -55,6 +94,28 @@ class VisibilityGraph3D(Solver):
         
 
     def branchAndBound(self, start: Vertex, end: Vertex, vertices: 'list[Vertex]', costMatrix: np.ndarray, costFunction: 'Callable[[np.ndarray, np.ndarray], float]'):
+        """
+        implementation of branch and bound algorithm for seaching for path from start to end
+
+        Parameters
+        ----------
+        start: Vertex
+            starting vertex
+        end: Vertex
+            ending vertex
+        vertices: list[Vertex]
+            list of graph vertices, length n
+        costMatrix: ndarray
+            upper triangular matrix of edge costs -1 for not valid,
+            shape n x n
+        costFunction: Callable[[ndarray, ndarray], float]
+            lower bound for traveling between vertices
+        
+        Returns
+        -------
+        list[Vertex]
+            sequence of vertices traveling from start to end (start, ..., end)
+        """
         for vertex in vertices:
             vertex.cost = np.inf
             vertex.traceback = np.inf
@@ -88,6 +149,23 @@ class VisibilityGraph3D(Solver):
 
 
     def findHeadings(self, vertices: 'list[Vertex]', radius: float, flightAngle: float):
+        """
+        uses angle bisector and alternating algorithms to find headings for dubins airplane
+
+        Parameters
+        ----------
+        vertices: list[Vertex]
+            list of vertices to transverse
+        radius: float
+            turn radius of airplane
+        flightAngle:
+            flightAngle of airplane
+        
+        Returns
+        -------
+        list[Vertex]
+            list of vertices updated with heading angles
+        """
         for i in range(len(vertices)):
             vertices[i].psi, vertices[i].gamma = self.bisectAnglePerpendicular(
                 vertices[i - 1],
@@ -113,7 +191,25 @@ class VisibilityGraph3D(Solver):
                 state = 0
         return vertices
 
-    def bisectAnglePerpendicular(self, a: Vertex, b: Vertex, c: Vertex, flightAngle):
+    def bisectAnglePerpendicular(self, a: Vertex, b: Vertex, c: Vertex, flightAngle: float):
+        """
+        find angle bisectors between two points
+
+        Parameters
+        ----------
+        a: Vertex
+            first point
+        b: Vertex
+            middle point
+        c: Vertex
+            last point
+        fightAngle: float
+
+        Returns
+        -------
+        tuple[float, float]
+            xy angle psi and sz angle gamma
+        """
         vA = np.array([[a.x, a.y, a.z]])
         vB = np.array([[b.x, b.y, b.z]])
         vC = np.array([[c.x, c.y, c.z]])
@@ -128,15 +224,51 @@ class VisibilityGraph3D(Solver):
         gamma = (gammaBa + gammaBc) / 2
         return psi, np.clip(gamma, -flightAngle, flightAngle)
     
-    def vectorAngle(self, vector):
-        theta = np.arctan2(vector[0, 1], vector[0, 0])
-        phi = np.arctan2(vector[0, 2], np.linalg.norm(vector[0, :2])) # phi in [-pi/2 to pi/2]
+    def vectorAngle(self, vector: np.ndarray):
+        """
+        find angles created by vector
 
-        return theta, phi
+        Paramters
+        ---------
+        vector: ndarray
+            vector to find angles for
+        
+        Returns
+        -------
+            xy angle psi and sz angle gamma
+        """
+        psi = np.arctan2(vector[0, 1], vector[0, 0])
+        gamma = np.arctan2(vector[0, 2], np.linalg.norm(vector[0, :2])) # phi in [-pi/2 to pi/2]
+
+        return psi, gamma
 
 
-    def makeGraph(self, start, end, environment: pv.PolyData, levelSets, inflateRadius, costFunction: 'Callable[[np.ndarray, np.ndarray], float]'):
+    def makeGraph(self, start: np.ndarray, end: np.ndarray, environment: pv.PolyData, levelSets: np.ndarray, inflateRadius: float, costFunction: 'Callable[[np.ndarray, np.ndarray], float]'):
+        """
+        make visibility graph
 
+        Parameters
+        ----------
+        start: ndarray
+            start location
+        end: ndarray
+            end location
+        environment: PolyData
+            mesh of the environment to transverse
+        levelSets: ndarray
+            list of z levels to slice environment with
+        inflateRadius: float
+            amount to inflate obstacles by
+        costFunction: Callable[[ndarray, ndarray], float]
+            lower found function to traveling between two points
+        
+        Returns
+        -------
+        tuple[list[Vertex], npdarray]
+            (vertices, costMatrix) vertices is a vertex list for the graph cost matrix is an
+            upper triangular matrix of lower bound travel costs
+
+        """
         # do 2d problem at different altitude slices
         levels = [polygonsFromMesh(levelSet, environment) for levelSet in levelSets]
 
@@ -167,8 +299,26 @@ class VisibilityGraph3D(Solver):
         return vertices, costMatrix
     
     def validPath(self, dubinsPath: DubinsPath, environment: pv.PolyData):
+        """
+        sees if a dubins path intersects with environment
+
+        Parameters
+        ----------
+        dubinsPath: DubinsPath
+            dubins path to test
+        environment: PloyData
+            environment to test against
+        
+        Returns
+        -------
+        bool
+            true if path doesn't intersect with environment false if path intersects with environment
+        """
         #TODO figure out circle polygon raytracing algorithm to see if any paths collide with environment
         return True
 
 class NoPathFoundException(Exception):
+    """
+    Exception that is raise when to valid path between start and end is found
+    """
     pass

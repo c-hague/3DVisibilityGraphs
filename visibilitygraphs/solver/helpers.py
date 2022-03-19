@@ -3,10 +3,18 @@ import pyvista as pv
 from shapely.geometry import Polygon
 from shapely.geometry.polygon import orient
 import heapq
+"""
+Authors
+-------
+Collin Hague : chague@uncc.edu
+"""
 
 APPROX_ZERO = .0001
 
 class Node:
+    """
+        node class for connecting line segments
+    """
     def __init__(self, start, end):
         self.start = start
         self.end = end
@@ -14,6 +22,20 @@ class Node:
         self.root: Node = None
 
 def polygonsFromMesh(zLevel: float, mesh: pv.PolyData) -> 'list[Polygon]':
+    """
+    slices a mesh along a plane parallel to xy plane at height zLevel
+
+    Parameters
+    ----------
+    zLevel: float
+        z height to slice at
+    mesh: PolyData
+        environment mesh
+    Returns
+    -------
+    list[Polygons]
+        list of polygons resulting from z slice
+    """
     points = np.array([mesh.cell_points(i) for i in range(mesh.n_cells)])
     vectors = np.roll(points, 1,axis=1) - points
     t = np.einsum('k, ijk->ij', [0, 0, 1], np.subtract(points, np.array([[0, 0, zLevel]]))) / np.einsum('ijk, k->ij', -vectors, [0, 0, 1])
@@ -91,6 +113,21 @@ def polygonsFromMesh(zLevel: float, mesh: pv.PolyData) -> 'list[Polygon]':
 
 
 def inflatePolygon(polygon: Polygon, radius: float) -> Polygon:
+    """
+    inflates polygon by moving points away from polygon and taking convex hull
+    
+    Parameters
+    ----------
+    polygon: Polygon
+        polygon to inflate
+    radius: float
+        radius to inflate py
+    
+    Returns
+    -------
+    Polygon
+        inflated polygon
+    """
     points = np.array(polygon.exterior.xy).T[:-1, :]
     newPoints = []
     for i in range(points.shape[0]):
@@ -103,7 +140,16 @@ def inflatePolygon(polygon: Polygon, radius: float) -> Polygon:
 
 
 def heapUpdatePriority(heap:list, item):
-    """update heap item priority"""
+    """
+    update heap item priority
+
+    Parameters
+    ----------
+    heap: list
+        heap created by heapq, is modified
+    item: Any
+        item with priority update
+    """
     i = heap.index(item)
     if i < 0:
         return

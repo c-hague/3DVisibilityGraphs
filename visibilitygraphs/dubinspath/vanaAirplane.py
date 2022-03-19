@@ -1,3 +1,6 @@
+from .dubinsCar import DubinsCar
+from visibilitygraphs.models import DubinsPath, Vertex, DubinsPathType
+import numpy as np
 """
 Authors
 -------
@@ -8,10 +11,6 @@ References
     Lumelsky, V. (2001). Classification of the Dubins set.
     Vana, P., Alves Neto, A., Faigl, J.; MacHaret, D. G. (2020). Minimal 3D Dubins Path with Bounded Curvature and Pitch Angle.
 """
-from .dubinsCar import DubinsCar
-from visibilitygraphs.models import DubinsPath, Vertex, DubinsPathType
-import numpy as np
-
 
 
 APPROX_ZERO = .0001
@@ -21,7 +20,29 @@ APPROX_ZERO = .0001
 DEFUALT_DUBINS = (np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.inf, DubinsPathType.UNKNOWN, DubinsPathType.UNKNOWN)
 
 class VanaAirplane(DubinsCar):
+    """
+    Calculates the 3D Dubins path for a fixed-wing aircraft with minimun turn radius and flight angle constraint
+    """
     def calculatePath(self, q0: Vertex, q1: Vertex, r, flightAngle):
+        """
+        Calculates path between starting and final configurations with minimum turn radius r and flight angle constraint
+
+        Parameters
+        ----------
+        q0: Vertex
+            initial configuration
+        q1: Vertex
+            final configuration
+        r: float
+            minimum turn radius
+        flightAngle: float
+            flight angle constraint
+        
+        Returns
+        -------
+        DubinsPath
+            3D Dubins path
+        """
         rHorizontal = r * 2
         xyEdge, szEdge = self.decoupled(q0, q1, r, rHorizontal, flightAngle)
         while not self.isFeasible(szEdge, flightAngle):
@@ -57,6 +78,27 @@ class VanaAirplane(DubinsCar):
     
     
     def decoupled(self, q0: Vertex, q1: Vertex, r, rHorizontal, flightAngle):
+        """
+        calculate 2 dubins paths one in xy plane and one in arclength z plane
+
+        Parameters
+        ----------
+        q0: Vertex
+            initial configuration
+        q1: Vertex 
+            final Configuration
+        r: float
+            minimum turn radius
+        rHorizontal: float
+            minimum turn radius in xy plane
+        flightAngle: float
+            flight angle constraint
+        
+        Returns
+        -------
+        tuple[DubinsPath, DubinsPath]
+            xyDubinspath, szDubinsPath
+        """
         xyEdge = super().calculatePath(q0, q1, rHorizontal)
         rVertical = 1 / np.sqrt(r ** -2 - rHorizontal ** -2)
         qz0 = Vertex(x=0, y=q0.z, psi=q0.gamma)
@@ -65,6 +107,21 @@ class VanaAirplane(DubinsCar):
         return xyEdge, szEdge
     
     def isFeasible(self, szEdge: DubinsPath, flightAngle):
+        """
+        is the szDubins path valid
+
+        Parameters
+        ----------
+        szEdge: DubinsPath
+            sz dubins path
+        flightAngle: float
+            flight angle constraint
+        
+        Returns
+        -------
+        bool
+            if the sz dubins path is valid
+        """
         if szEdge.type == DubinsPathType.LRL or szEdge.type == DubinsPathType.RLR or szEdge.type == DubinsPathType.UNKNOWN:
             return False
         if abs(szEdge.start.psi + szEdge.a / szEdge.r) >  flightAngle:

@@ -1,6 +1,17 @@
 from typing import Tuple
 import numpy as np
 from visibilitygraphs.models import Vertex, DubinsPath, DubinsPathType
+"""
+solves 3d path planning with obsticles for dubins airplane
+
+Authors
+-------
+Collin Hague : chague@uncc.edu
+
+References
+----------
+https://github.com/robotics-uncc/RobustDubins
+"""
 
 
 PATH_COMPARE_TOLERANCE = 1e-6
@@ -10,8 +21,32 @@ DEFAULT_DUBINS = (np.nan, np.nan, np.nan, np.Infinity, 0)
 
 
 class DubinsCar(object):
+    """
+    Calculates 2D Dubins car paths
 
+    Methods
+    -------
+    calculatePath(q0: Vertex, q1: Vertex, r: float): DubinsPath
+    calculatePathType(q0: Vertex, q1: Vertex, r: float, pathType: DubinsPathType): DubinsPath
+    """
     def calculatePath(self, q0: Vertex, q1: Vertex, r: float):
+        """
+        calculates the optimal dubins path between two points
+
+        Parameters
+        ----------
+        q0: Vertex
+            initial position
+        q1: Vertex
+            final position
+        r: float
+            minimum turn radius
+        
+        Returns
+        -------
+        DubinsPath
+            the optimal dubins path
+        """
         x, y, h = self._normalize(q0.x, q0.y, q0.psi, q1.x, q1.y, q1.psi, r)
         m_cth = np.cos(h)
         m_sth = np.sin(h)
@@ -44,7 +79,24 @@ class DubinsCar(object):
             n=2
         )
     
-    def solveType(self, q0: Vertex, q1: Vertex, r, pathType):
+    def solveType(self, q0: Vertex, q1: Vertex, r, pathType: DubinsPathType):
+        """
+        calculates one type of dubins paths between two points
+
+        Parameters
+        ----------
+        q0: Vertex
+            initial position
+        q1: Vertex
+            final position
+        r: float
+            minimum turn radius
+        
+        Returns
+        -------
+        DubinsPath
+            the dubins path with type pathType
+        """
         x, y, h = self._normalize(q0.x, q0.y, q0.psi, q1.x, q1.y, q1.psi, r)
         m_cth = np.cos(h)
         m_sth = np.sin(h)
@@ -273,7 +325,7 @@ class DubinsCar(object):
             # 4 possible a values
             possibleA = [
                 a % (2 * np.pi),
-                (a + np.pi / 2) % (2 * np.pi),
+                (a + np.pi / 2) % (2 * np.pi),PathT
                 (a + np.pi) % (2 * np.pi),
                 (a + 3 * np.pi / 2) % (2 * np.pi)
             ]

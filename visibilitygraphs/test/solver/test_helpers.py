@@ -3,8 +3,16 @@ import numpy as np
 import pyvista as pv
 import matplotlib.pyplot as plt
 from shapely.geometry import Polygon
+"""
+test visiblitygraph.solver.helpers methods
+
+Authors
+-------
+Collin Hague : chague@uncc.edu
+"""
 
 def testPolygonsFromMesh():
+    """tests polygonsFromMesh"""
     reader = pv.get_reader('data/uptownCharlotte.obj')
     environment: pv.PolyData = reader.read()
     environment.transform(np.array([[1, 0, 0, 0], [0 , 0 , 1, 0], [0, 1, 0, 0], [0, 0, 0, 1]]))
@@ -14,6 +22,7 @@ def testPolygonsFromMesh():
     plt.show()
 
 def testInflatePolygon():
+    """tests inflatePolygon"""
     polygon = Polygon(np.array([[ -82.67499797, -368.65649923],
        [ -90.19999695, -377.41400146],
        [ -86.25333023, -380.82983398],

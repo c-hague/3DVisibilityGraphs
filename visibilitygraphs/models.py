@@ -2,7 +2,13 @@ from dataclasses import dataclass
 from functools import total_ordering
 import numpy as np
 from enum import IntEnum, auto
+"""
+models for the visibiltygraphs package
 
+Authors
+-------
+Collin Hague : chague@uncc.edu
+"""
 
 class DubinsPathType(IntEnum):
     """Different Dubins Paths"""
