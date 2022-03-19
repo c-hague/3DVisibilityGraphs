@@ -1,3 +1,3 @@
 from .solverfactory import SolverBuilder, SolverBuilderException, SolverType
 from .solver import Solver
-from .visibilitygraph import VisibilityGraph
+from .visibilitygraph3d import VisibilityGraph3D

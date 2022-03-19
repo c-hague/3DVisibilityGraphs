@@ -1,6 +1,6 @@
 import numpy as np
 
-from .visibilitygraph import VisibilityGraph
+from .visibilitygraph3d import VisibilityGraph3D
 from .solver import Solver
 
 """
@@ -62,7 +62,7 @@ class SolverBuilder(object):
         if self._type == SolverType.UNKNOWN:
             raise SolverBuilderException('cannot create solver with type SolverType.UNKNOWN')
         elif self._type == SolverType.VISIBILITY_GRAPH:
-            return VisibilityGraph()
+            return VisibilityGraph3D()
         else:
             raise SolverBuilderException(f'cannot create solver with type {self._type}')
 
