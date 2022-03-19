@@ -2,6 +2,7 @@ import numpy as np
 import pyvista as pv
 from shapely.geometry import Polygon
 from shapely.geometry.polygon import orient
+import heapq
 
 APPROX_ZERO = .0001
 
@@ -99,3 +100,17 @@ def inflatePolygon(polygon: Polygon, radius: float) -> Polygon:
         c = c / np.linalg.norm(c) * radius
         newPoints.append(points[i - 1] + c)
     return Polygon(shell=newPoints).convex_hull
+
+
+def heapUpdatePriority(heap:list, item):
+    """update heap item priority"""
+    i = heap.index(item)
+    if i < 0:
+        return
+    # move to top of heap
+    while i > 0:
+        heap[(i - 1) // 2], heap[i] = heap[i], heap[(i - 1) // 2]
+        i = (i - 1) // 2
+    # remove from heap and reinsert
+    temp = heapq.heappop(heap)
+    heapq.heappush(heap, temp)
