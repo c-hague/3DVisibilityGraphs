@@ -3,6 +3,7 @@ import numpy as np
 import pyvista as pv
 import matplotlib.pyplot as plt
 from shapely.geometry import Polygon
+import time
 """
 test visiblitygraph.solver.helpers methods
 
@@ -16,9 +17,12 @@ def testPolygonsFromMesh():
     reader = pv.get_reader('data/uptownCharlotte.obj')
     environment: pv.PolyData = reader.read()
     environment.transform(np.array([[1, 0, 0, 0], [0 , 0 , 1, 0], [0, 1, 0, 0], [0, 0, 0, 1]]))
+    s = time.time()
     polygs = polygonsFromMesh(20, environment)
     for poly in polygs:
         plt.plot(*poly.exterior.xy)
+    plt.savefig('polygonsFromMesh.png')
+    plt.title(f'Charlotte Sliced at 20m n Polygons {environment.n_cells} Execution Time {time.time() - s:.2f}s')
     plt.show()
 
 def testInflatePolygon():

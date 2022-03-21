@@ -51,54 +51,53 @@ def polygonsFromMesh(zLevel: float, mesh: pv.PolyData) -> 'list[Polygon]':
             segments[ii, jj, :] = p[ii, jj, :] + s[ii, jj] * d[ii, jj, :]
 
     # make polygons out of segments
-    segments = [segments[i, :, :] for i in range(segments.shape[0])]
     if len(segments) <= 0:
         return []
-    ring = Node(segments[0][1, :], segments[0][0, :])
-    segments.pop(0)
+    ring = Node(segments[0, 1, :].copy(), segments[0, 0, :].copy())
+    segments[0, :, :] = np.inf
     rings = []
-    while len(segments) > 0:
+    while not np.isinf(segments).all():
         miss = True
-        i = 0
-        #TODO make binary search
-        while i < len(segments):
-            a = np.linalg.norm(np.subtract(ring.end, segments[i]), axis=1) < APPROX_ZERO
-            # check for duplicate segment
-            if ((np.linalg.norm(np.subtract(ring.start, - segments[i]), axis=1) < APPROX_ZERO) | a).all():
-                segments.pop(i)
-                miss = False
-                continue
+        vec = np.linalg.norm(segments - ring.end, axis=2)
+        i = np.argmin(vec, axis=0)
+        # check for duplicate segment
+        a = vec[i, [0, 1]] < APPROX_ZERO
+        if i[0] == i[1] and a.all():
+            segments[i] = np.inf
+            miss = False
+            continue
 
-            # if the end matches
-            if a.any():
-                miss = False
-                segment = segments.pop(i)
-                if a[0]:
-                    ring.next = Node(segment[0, :], segment[1, :])
-                else:
-                    ring.next = Node(segment[1, :], segment[0, :])
-                if ring.root is None:
-                    ring.next.root = ring
-                else:
-                    ring.next.root = ring.root
-                ring = ring.next
+        # if the end matches
+        if a.any():
+            miss = False
+            if a[0]:
+                segment = segments[i[0], :, :].copy()
+                ring.next = Node(segment[0, :], segment[1, :])
+                segments[i[0], :, :] = np.inf
+            else:
+                segment = segments[i[1], :, :].copy()
+                ring.next = Node(segment[1, :], segment[0, :])
+                segments[i[1], :, :] = np.inf
+            if ring.root is None:
+                ring.next.root = ring
+            else:
+                ring.next.root = ring.root
+            ring = ring.next
 
-                # check to see if loop closed
-                if np.linalg.norm(ring.root.start - ring.end) < APPROX_ZERO:
-                    ring.next = ring.root
-                    rings.append(ring.root)
-                    if len(segments) > 0:
-                        ring = Node(segments[0][1, :], segments[0][0, :])
-                        segments.pop(0)
-                continue
-            
-            # no match go to next one
-            i += 1
-        if miss and len(segments) > 0:
+            # check to see if loop closed
+            if np.linalg.norm(ring.root.start - ring.end) < APPROX_ZERO:
+                ring.next = ring.root
+                rings.append(ring.root)
+                if not np.isinf(segments).all():
+                    i, _, _ = np.where(~np.isinf(segments))
+                    ring = Node(segments[i[0], 1, :].copy(), segments[i[0], 0, :].copy())
+                    segments[i[0], :, :] = np.inf
+
+        if miss and not np.isinf(segments).all():
             # bad ring
-            ring = Node(segments[0][1, :], segments[0][0, :])
-            segments.pop(0)
-
+            i, _, _ = np.where(~np.isinf(segments))
+            ring = Node(segments[i[0], 1, :].copy(), segments[i[0], 0, :].copy())
+            segments[i[0], :, :] = np.inf
 
     polygons = []
     for ring in rings:
