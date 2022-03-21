@@ -29,6 +29,43 @@ class SolverBuilder(object):
     """
     def __init__(self):
         self._type = SolverType.UNKNOWN
+        self._levelSets = 0
+        self._inflateFactor = 2
+    
+    def setLevelSets(self, levelSets: int):
+        """
+        set solver level set factor for VisibilityGraph3D
+        
+        Parameters
+        ----------
+        levelSets: int
+            how many z slices to make
+
+        Returns
+        -------
+        SolverBuilder
+            self for method chaining
+        """
+        self._levelSets = levelSets
+        return self
+    
+    def setInflateFactor(self, inflateFactor: float):
+        """
+        set solver inflate factor for VisibilityGraph3D
+        
+        Parameters
+        ----------
+        inflateFactor: float
+            how much to inflate polygons
+
+        Returns
+        -------
+        SolverBuilder
+            self for method chaining
+        """
+        self._inflateFactor = inflateFactor
+        return self
+
 
     def setType(self, type: SolverType):
         """
@@ -62,7 +99,7 @@ class SolverBuilder(object):
         if self._type == SolverType.UNKNOWN:
             raise SolverBuilderException('cannot create solver with type SolverType.UNKNOWN')
         elif self._type == SolverType.VISIBILITY_GRAPH:
-            return VisibilityGraph3D()
+            return VisibilityGraph3D(self._levelSets, self._inflateFactor)
         else:
             raise SolverBuilderException(f'cannot create solver with type {self._type}')
 

@@ -25,6 +25,8 @@ def main():
     parser.add_argument('-r', '--radius', default=1, type=float, help='aircraft turn radius')
     parser.add_argument('-f', '--flightangle', default=np.pi/4, type=float, help='aircraft max/min flight angle')
     parser.add_argument('-t', '--type', default=1, type=int, help='solver type 1-visibility graph')
+    parser.add_argument('--levels', default=4, type=int, help='type 1 number of z slices')
+    parser.add_argument('--inflate', type=float, default=2, help='type 1 polygon inflation factor')
     args = parser.parse_args()
 
     q0 = np.array([args.initial])
@@ -36,12 +38,15 @@ def main():
         raise FileNotFoundError(f'{fname} not found')
     reader = pv.get_reader(fname)
     environment = reader.read()
+    environment.transform(np.array([[1, 0, 0, 0], [0 , 0 , 1, 0], [0, 1, 0, 0], [0, 0, 0, 1]]))
     builder = SolverBuilder()
-    solver = builder.setType(args.type).build()
+    solver = builder.setType(args.type)\
+        .setInflateFactor(args.inflate)\
+        .setLevelSets(args.levels).build()
     if not environment.is_all_triangles():
         raise ValueError(f'{fname} must be only be triangles')
     solution = solver.solve(q0, q1, radius, flightAngle, environment)
-
+    
 
 
 

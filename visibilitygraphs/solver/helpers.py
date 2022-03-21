@@ -52,12 +52,15 @@ def polygonsFromMesh(zLevel: float, mesh: pv.PolyData) -> 'list[Polygon]':
 
     # make polygons out of segments
     segments = [segments[i, :, :] for i in range(segments.shape[0])]
+    if len(segments) <= 0:
+        return []
     ring = Node(segments[0][1, :], segments[0][0, :])
     segments.pop(0)
     rings = []
     while len(segments) > 0:
         miss = True
         i = 0
+        #TODO make binary search
         while i < len(segments):
             a = np.linalg.norm(np.subtract(ring.end, segments[i]), axis=1) < APPROX_ZERO
             # check for duplicate segment

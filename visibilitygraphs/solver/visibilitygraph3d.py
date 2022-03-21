@@ -65,7 +65,7 @@ class VisibilityGraph3D(Solver):
 
         _, _, _, _, zMin, zMax = environment.bounds
 
-        vertices, costMatrix = self.makeGraph(q0[:3], q1[:3], environment, np.linspace(zMin, zMax, self.numLevelSets), radius * self.inflateFactor, modifiedDistance)
+        vertices, costMatrix = self.makeGraph(q0[0, :3], q1[0, :3], environment, np.linspace(zMin + (zMax - zMin) / self.numLevelSets, zMax, self.numLevelSets), radius * self.inflateFactor, modifiedDistance)
         end = vertices[1]
 
         validPath = False
@@ -166,7 +166,7 @@ class VisibilityGraph3D(Solver):
         list[Vertex]
             list of vertices updated with heading angles
         """
-        for i in range(len(vertices)):
+        for i in range(1, len(vertices) - 1):
             vertices[i].psi, vertices[i].gamma = self.bisectAnglePerpendicular(
                 vertices[i - 1],
                 vertices[i],
@@ -288,7 +288,7 @@ class VisibilityGraph3D(Solver):
         # evaluate visibility with ray tracing
         indices = np.array(np.triu_indices(points.shape[0], k=1)).T
         origins = np.apply_along_axis(lambda x: points[x[0]], 0, indices)
-        directions = np.apply_along_axis(lambda x: points[x[1]] - points[x[0]], indices)
+        directions = np.apply_along_axis(lambda x: points[x[1]] - points[x[0]], 0, indices)
         _, ray_indices, _ = environment.multi_ray_trace(origins, directions, first_point=True)
         select = np.in1d(points.shape[0], ray_indices)
         visible = indices[~select]
