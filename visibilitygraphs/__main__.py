@@ -10,7 +10,8 @@ import argparse
 import numpy as np
 import pyvista as pv
 import os
-from .solver import SolverBuilder
+from .solver import SolverBuilder, NoPathFoundException
+from .plotting import SolutionPlotter
 
 def main():
     parser = argparse.ArgumentParser(
@@ -27,6 +28,7 @@ def main():
     parser.add_argument('-t', '--type', default=1, type=int, help='solver type 1-visibility graph')
     parser.add_argument('--levels', default=4, type=int, help='type 1 number of z slices')
     parser.add_argument('--inflate', type=float, default=2, help='type 1 polygon inflation factor')
+    parser.add_argument('-p', '--plot', type=bool, default=True, help='plot solution when finished')
     args = parser.parse_args()
 
     q0 = np.array([args.initial])
@@ -45,10 +47,13 @@ def main():
         .setLevelSets(args.levels).build()
     if not environment.is_all_triangles():
         raise ValueError(f'{fname} must be only be triangles')
-    solution = solver.solve(q0, q1, radius, flightAngle, environment)
-    
-
-
+    try:
+        solution = solver.solve(q0, q1, radius, flightAngle, environment)
+    except NoPathFoundException:
+        solution = []
+    if args.plot:
+        plotter = SolutionPlotter()
+        plotter.plotSolution(environment, q0, q1, solution)
 
 
 if __name__ == '__main__':

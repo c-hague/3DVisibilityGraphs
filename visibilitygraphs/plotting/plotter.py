@@ -24,7 +24,7 @@ class SolutionPlotter:
             plotter.add_mesh(mesh)
         s = pv.Sphere(radius=1, center=start[:, :3])
         e = pv.Sphere(radius=1, center=end[:, :3])
-        plotter.add_mesh(s)
-        plotter.add_mesh(e)
+        plotter.add_mesh(s, color='green')
+        plotter.add_mesh(e, color='red')
         plotter.show()
     

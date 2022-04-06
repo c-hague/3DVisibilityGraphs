@@ -26,7 +26,7 @@ class VisibilityGraph3D(Solver):
     
     Methods
     -------
-    __init__(numLevelSets: int, inflateFactor: float): VisibilityGraph3D
+    __init__(numLevelSets: int, inflateFactor: float, sampleDistance: float): VisibilityGraph3D
     solve(q0: ndarray, q1: ndarray, radius: float, flightAngle: float, environment: PolyData): list[DubinsPath]
     branchAndBound(start: Vertex, end: Vertex, vertices: list[Vertex], costMatrix: ndarray, costFunction: Callable[[ndarray, ndarray], float]): list[Vertex]
     findHeadings(vertices: list[Vertex], radius: float, flightAngle: float): list[Vertex]
@@ -34,7 +34,7 @@ class VisibilityGraph3D(Solver):
     vectorAngle(vector: ndarray): tuple[[float, float]]
     makeGraph(start: ndarray, end: ndarray, environment: PolyData, levelSets: ndarray, inflateRadius: float, costFunction: Callable[[ndarray, ndarray], float]): tuple[list[Vertex], ndarray]
     """
-    def __init__(self, numLevelSets: int, inflateFactor: float):
+    def __init__(self, numLevelSets: int, inflateFactor: float, sampleDistance: float):
         """
         Parameters
         ----------
@@ -42,10 +42,13 @@ class VisibilityGraph3D(Solver):
             number of z altitude slices to make
         inflateFactor: float
             distance from obsticles / turn radius
+        sampleDistance: float
+            distance along level set polygons to sample
         """
         self.numLevelSets = numLevelSets
         self.inflateFactor = inflateFactor
         self.dubins = VanaAirplane()
+        self.sampleDistance = sampleDistance
 
     def solve(self, q0: np.ndarray, q1: np.ndarray, radius: float, flightAngle: float, environment: pv.PolyData) -> 'list[DubinsPath]':
         """
@@ -65,7 +68,7 @@ class VisibilityGraph3D(Solver):
 
         _, _, _, _, zMin, zMax = environment.bounds
 
-        vertices, costMatrix = self.makeGraph(q0[0, :3], q1[0, :3], environment, np.linspace(zMin + (zMax - zMin) / self.numLevelSets, zMax, self.numLevelSets), radius * self.inflateFactor, modifiedDistance)
+        vertices, costMatrix = self.makeGraph(q0[0, :3], q1[0, :3], environment, np.linspace(zMin + (zMax - zMin) / self.numLevelSets + radius, zMax, self.numLevelSets), radius * self.inflateFactor, modifiedDistance)
         end = vertices[1]
 
         validPath = False
@@ -196,7 +199,8 @@ class VisibilityGraph3D(Solver):
             vertices[i].psi, vertices[i].gamma = self.bisectAnglePerpendicular(
                 vertices[i - 1],
                 vertices[i],
-                vertices[(i + 1) % len(vertices)]
+                vertices[(i + 1) % len(vertices)],
+                flightAngle
             )
         state = 0
         for i in range(len(vertices)):
@@ -308,6 +312,13 @@ class VisibilityGraph3D(Solver):
                 allX += x
                 allY += y
                 allZ += [levelSets[j]] * len(y)
+            if j == len(levels) - 1:
+                for i in range(len(polygons)):
+                    x, y = inflatePolygon(polygons[i], inflateRadius).exterior.xy
+                    allX += x
+                    allY += y
+                    allZ += [levelSets[j] + inflateRadius] * len(y)
+                
         points = np.array([allX, allY, allZ]).T
 
         # make graph
