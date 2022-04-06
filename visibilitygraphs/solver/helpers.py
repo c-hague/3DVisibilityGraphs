@@ -131,13 +131,16 @@ def inflatePolygon(polygon: Polygon, radius: float) -> Polygon:
         inflated polygon
     """
     points = np.array(polygon.exterior.xy).T[:-1, :]
-    newPoints = []
-    for i in range(points.shape[0]):
-        a = points[i- 1, :] - points[i - 2, :]
-        b = points[i - 1, :] - points[i, :]
-        c = a * np.linalg.norm(b) + b * np.linalg.norm(a)
-        c = c / np.linalg.norm(c) * radius
-        newPoints.append(points[i - 1] + c)
+    directions = points - np.roll(points, 1, axis=0)
+    directions = np.divide(directions.T, np.linalg.norm(directions,axis=1)).T
+    orth = np.matmul(directions, np.array([[0, -1], [1, 0]]))
+    newStarts = points + orth * radius
+    orth1 = np.roll(orth, 1, axis=0)
+    l = -np.einsum('ij, ij->i', np.roll(newStarts, 1, axis=0), orth1)
+    t = -(l + np.einsum('ij, ij->i',orth1, newStarts)) / np.einsum('ij, ij->i',orth1, directions)
+    newPoints = newStarts + np.einsum('ij, i -> ij', directions, t)
+
+    
     return Polygon(shell=newPoints).convex_hull
 
 

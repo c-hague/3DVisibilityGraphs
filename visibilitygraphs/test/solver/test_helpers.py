@@ -3,6 +3,7 @@ import numpy as np
 import pyvista as pv
 import matplotlib.pyplot as plt
 from shapely.geometry import Polygon
+from shapely.geometry.polygon import orient
 import time
 """
 test visiblitygraph.solver.helpers methods
@@ -27,6 +28,12 @@ def testPolygonsFromMesh():
 
 def testInflatePolygon():
     """tests inflatePolygon"""
+    square =orient(Polygon([[0, 0], [1, 0], [1, 1], [0, 1]]))
+    newPolygon = inflatePolygon(square, 1)
+    plt.plot(*square.exterior.xy)
+    plt.plot(*newPolygon.exterior.xy)
+    plt.show()
+
     polygon = Polygon(np.array([[ -82.67499797, -368.65649923],
        [ -90.19999695, -377.41400146],
        [ -86.25333023, -380.82983398],
