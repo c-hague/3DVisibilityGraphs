@@ -24,35 +24,35 @@ class DubinsPathType(IntEnum):
 @dataclass
 class DubinsPath:
     """class for dubins path data"""
-    start: 'Vertex'
-    end: 'Vertex'
-    a: float
-    b: float
-    c: float
-    d: float
-    e: float
-    f: float
-    r: float
-    rz: float
-    type: DubinsPathType
-    zType: DubinsPathType
-    cost: float
-    n: int
+    start: 'Vertex' = None
+    end: 'Vertex' = None
+    a: float = 0
+    b: float = 0
+    c: float = 0
+    d: float = 0
+    e: float = 0
+    f: float = 0
+    r: float = 0
+    rz: float = 0
+    type: DubinsPathType = 0
+    zType: DubinsPathType = 0
+    cost: float = 0
+    n: int = 0
 
 
 @total_ordering
 @dataclass
 class Vertex:
     """class for vertex of a graph"""
-    x: float
-    y: float
-    z: float
-    psi: float
-    gamma: float
-    id: int
-    cost: float
-    parent: 'Vertex'
-    traceback: float
+    x: float = 0
+    y: float = 0
+    z: float = 0
+    psi: float = 0
+    gamma: float = 0
+    id: int = -1
+    cost: float = 0
+    parent: 'Vertex' = None
+    traceback: float = 0
 
     @staticmethod
     def fromList(a):
@@ -66,11 +66,11 @@ class Vertex:
 
 
     def __eq__(self, other):
-        if not isinstance(Vertex):
+        if not isinstance(other, Vertex):
             return False
         return self.id == other.id
     
     def __lt__(self, other):
-        if not isinstance(Vertex):
+        if not isinstance(other, Vertex):
             return False
         return self.cost < other.cost

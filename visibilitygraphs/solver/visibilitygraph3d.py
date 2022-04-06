@@ -59,7 +59,7 @@ class VisibilityGraph3D(Solver):
         """
         def modifiedDistance(a , b):
             """calculate best path based on flight angle"""
-            dz = abs(b[0, 2] - a[0, 2])
+            dz = abs(b[2] - a[2])
             h = dz / np.sin(flightAngle)
             return int(np.ceil(max(h, np.linalg.norm(b - a))))
 
@@ -70,7 +70,7 @@ class VisibilityGraph3D(Solver):
 
         validPath = False
         while not validPath:
-            sequence = self.branchAndBound(vertices[0], vertices[1], vertices, costMatrix, modifiedDistance)
+            sequence = self.aStar(vertices[0], vertices[1], vertices, costMatrix, modifiedDistance)
             if np.isinf(end.cost):
                 raise NoPathFoundException()
 
@@ -78,7 +78,7 @@ class VisibilityGraph3D(Solver):
             
             validPath = True
             paths = []
-            for i in range(len(sequence)):
+            for i in range(1, len(sequence)):
                 s = sequence[i - 1]
                 e = sequence[i]
                 path = self.dubins.calculatePath(s, e, radius, flightAngle)
@@ -90,10 +90,10 @@ class VisibilityGraph3D(Solver):
                 else:
                     paths.append(path)
         
-        return validPath
+        return paths
         
 
-    def branchAndBound(self, start: Vertex, end: Vertex, vertices: 'list[Vertex]', costMatrix: np.ndarray, costFunction: 'Callable[[np.ndarray, np.ndarray], float]'):
+    def aStar(self, start: Vertex, end: Vertex, vertices: 'list[Vertex]', costMatrix: np.ndarray, costFunction: 'Callable[[np.ndarray, np.ndarray], float]'):
         """
         implementation of branch and bound algorithm for seaching for path from start to end
 
@@ -123,28 +123,30 @@ class VisibilityGraph3D(Solver):
         start.traceback = 0
         queue = vertices.copy()
         heapq.heapify(queue)
-        bound = costFunction(start.asArray()[:3], end.asArray()[:3])
-        indices = np.arange(vertices.shape[0])
+        indices = np.arange(len(vertices))
 
         while len(queue) > 0:
             current = heapq.heappop(queue)
             for i in indices[costMatrix[current.id, :] > 0]:
                 vertex = vertices[i]
-                newCost = current.traceback + costFunction(current.asArray()[:3], vertex.asArray()[:3])
-                totalCost = newCost + costFunction(vertex.asArray()[:3], end.asArray()[:3])
-                if totalCost < vertex.cost and totalCost < bound:
+                newCost = current.traceback + costFunction(current.asArray()[0, :3], vertex.asArray()[0, :3])
+                totalCost = newCost + costFunction(vertex.asArray()[0, :3], end.asArray()[0, :3])
+                if totalCost < vertex.cost:
                     vertex.cost = totalCost
                     vertex.traceback = newCost
                     vertex.parent = current
                     heapUpdatePriority(queue, vertex)
                     if vertex == end:
                         break
+            if vertex == end:
+                break
 
         sequence: list[Vertex] = [end]
         current = end
         while current.parent is not None:
             current = current.parent
             sequence.append(current)
+        sequence.reverse()
         return sequence
 
 
@@ -166,6 +168,30 @@ class VisibilityGraph3D(Solver):
         list[Vertex]
             list of vertices updated with heading angles
         """
+        # 0 vertices
+        if len(vertices) < 1:
+            return vertices
+        
+        # 1 vertex
+        if len(vertices) == 1:
+            vertices[0].psi = 0
+            vertices[0].gamma = 0
+            return vertices
+            
+        # two vertices
+        if len(vertices) == 2:
+            a = vertices[0].asArray()[:3]
+            b = vertices[1].asArray()[:3]
+            psi, gamma = self.vectorAngle((b - a))
+            psi = (psi + 2 * np.pi) % (2 * np.pi)
+            gamma = np.clip(gamma, -flightAngle, flightAngle)
+            vertices[0].psi = psi
+            vertices[0].gamma = gamma
+            vertices[1].psi = psi
+            vertices[1].gamma = gamma
+            return vertices
+        
+        #three or more
         for i in range(1, len(vertices) - 1):
             vertices[i].psi, vertices[i].gamma = self.bisectAnglePerpendicular(
                 vertices[i - 1],
@@ -287,15 +313,16 @@ class VisibilityGraph3D(Solver):
         # make graph
         # evaluate visibility with ray tracing
         indices = np.array(np.triu_indices(points.shape[0], k=1)).T
-        origins = np.apply_along_axis(lambda x: points[x[0]], 0, indices)
-        directions = np.apply_along_axis(lambda x: points[x[1]] - points[x[0]], 0, indices)
+        origins = np.apply_along_axis(lambda x: points[x[0]], 1, indices)
+        directions = np.apply_along_axis(lambda x: points[x[1]] - points[x[0]], 1, indices)
         _, ray_indices, _ = environment.multi_ray_trace(origins, directions, first_point=True)
-        select = np.in1d(points.shape[0], ray_indices)
+        select = np.in1d(np.arange(indices.shape[0]), ray_indices)
         visible = indices[~select]
         costMatrix = np.ones([points.shape[0], points.shape[0]]) * -1
-        vertices = [Vertex(x[0], x[1], x[2], i, np.inf) for i, x in enumerate(points)]
+        vertices = [Vertex(x=x[0], y=x[1], z=x[2], id=i, cost=np.inf) for i, x in enumerate(points)]
         for pair in visible:
             costMatrix[pair[0], pair[1]] = costFunction(points[pair[0], :], points[pair[1], :])
+            costMatrix[pair[1], pair[0]] = costMatrix[pair[0], pair[1]]
         return vertices, costMatrix
     
     def validPath(self, dubinsPath: DubinsPath, environment: pv.PolyData):

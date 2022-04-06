@@ -325,7 +325,7 @@ class DubinsCar(object):
             # 4 possible a values
             possibleA = [
                 a % (2 * np.pi),
-                (a + np.pi / 2) % (2 * np.pi),PathT
+                (a + np.pi / 2) % (2 * np.pi),
                 (a + np.pi) % (2 * np.pi),
                 (a + 3 * np.pi / 2) % (2 * np.pi)
             ]
