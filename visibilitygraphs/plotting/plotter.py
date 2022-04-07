@@ -1,12 +1,40 @@
 import numpy as np
 import pyvista as pv
 from .helpers import vanaAirplaneCurve
+from visibilitygraphs.models import DubinsPath
+"""
+Authors
+-------
+Collin Hague : chague@uncc.edu
+"""
+
 
 class SolutionPlotter:
+    """
+    plots solution to path planning with object avoidance
+
+    Methods
+    -------
+    plotSolution(environment: PolyData, start: ndarray, end: ndarray, paths: list[DubinsPath])
+    """
     def __init__(self):
         pass
 
-    def plotSolution(self, environment, start, end, paths):
+    def plotSolution(self, environment: pv.PolyData, start: np.ndarray, end: np.ndarray, paths: 'list[DubinsPath]'):
+        """
+        plots solution to path planning with object avoidance
+
+        Parameters
+        ----------
+        environment: PolyData
+            environment the agent transverses
+        start: ndarray
+            start orientation of vehicle R^3 x S^2
+        end: ndarray
+            end orientation of vehicle R^3 x S^2
+        paths: list[DubinsPaths]
+            list of paths for the vehicle to follow
+        """
         plotter = pv.Plotter()
         plotter.add_mesh(environment)
         for path in paths:

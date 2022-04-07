@@ -1,8 +1,27 @@
-import pyvista as pv
+from typing import Callable
 import numpy as np
 from visibilitygraphs.models import DubinsPathType, DubinsPath
+"""
+Authors
+-------
+Collin Hague : chague@uncc.edu
+"""
 
-def vanaAirplaneCurve(path: DubinsPath):
+
+def vanaAirplaneCurve(path: DubinsPath) -> Callable[[float], np.ndarray]:
+    """
+    return a path function for a dubins curve where the input t is in [0, 1]
+
+    Paramters
+    ---------
+    path: DubinsPath
+        vana dubins path
+    
+    Returns
+    -------
+    f(float) -> ndarray
+        return mapping to 3d point in space
+    """
     xyFunction = dubinsCurve2d([path.start.x, path.start.y, path.start.psi], path.a, path.b, path.c, path.r, path.type)
     szFunction = dubinsCurve2d([0, path.start.z, path.start.gamma], path.d, path.e, path.f, path.rz, path.zType)
     def f(t):
@@ -72,10 +91,22 @@ def dubinsCurve2d(s: np.array, a, b, c, r, type: DubinsPathType):
         
     return f
         
-def manueverToDir(str):
+def manueverToDir(str: str) -> int:
+    """
+    maps dubins curve action to an interger {-1, 0, 1}
+
+    Paramters
+    ---------
+    str: str
+        dubins curve action
+
+    Returns
+    -------
+    int
+        L -> 1, R -> -1, S -> 0
+    """
     if str == 'L':
         return 1
     if str == 'R':
         return -1
-    if str == 'S':
-        return 0
+    return 0
