@@ -20,10 +20,10 @@ class SolutionPlotter:
             cells[:, 2] = np.arange(1, len(points), dtype=np.int_)
             poly.lines = cells
             poly['scalars'] = np.arange(poly.n_points)
-            mesh = poly.tube(radius=.1)
+            mesh = poly.tube(radius=1)
             plotter.add_mesh(mesh)
-        s = pv.Sphere(radius=1, center=start[:, :3])
-        e = pv.Sphere(radius=1, center=end[:, :3])
+        s = pv.Sphere(radius=5, center=start[:, :3])
+        e = pv.Sphere(radius=5, center=end[:, :3])
         plotter.add_mesh(s, color='green')
         plotter.add_mesh(e, color='red')
         plotter.show()
