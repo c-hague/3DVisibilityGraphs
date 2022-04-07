@@ -14,6 +14,9 @@ from .solver import SolverBuilder, NoPathFoundException
 from .plotting import SolutionPlotter
 
 def main():
+    """
+    main method
+    """
     parser = argparse.ArgumentParser(
         prog='visibilitygraphs',
         description='''
