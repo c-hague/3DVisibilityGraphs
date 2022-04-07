@@ -139,9 +139,9 @@ def inflatePolygon(polygon: Polygon, radius: float) -> Polygon:
     l = -np.einsum('ij, ij->i', np.roll(newStarts, 1, axis=0), orth1)
     t = -(l + np.einsum('ij, ij->i',orth1, newStarts)) / np.einsum('ij, ij->i',orth1, directions)
     newPoints = newStarts + np.einsum('ij, i -> ij', directions, t)
-
+    cleanedPoints = np.reshape(newPoints[~np.isinf(newPoints)], [-1, 2])
     
-    return Polygon(shell=newPoints).convex_hull
+    return Polygon(shell=cleanedPoints).convex_hull
 
 
 def heapUpdatePriority(heap:list, item):
