@@ -326,8 +326,9 @@ class VisibilityGraph3D(Solver):
         indices = np.array(np.triu_indices(points.shape[0], k=1)).T
         origins = np.apply_along_axis(lambda x: points[x[0]], 1, indices)
         directions = np.apply_along_axis(lambda x: points[x[1]] - points[x[0]], 1, indices)
-        _, ray_indices, _ = environment.multi_ray_trace(origins, directions, first_point=True)
-        select = np.in1d(np.arange(indices.shape[0]), ray_indices)
+        intersections, ray_indices, _ = environment.multi_ray_trace(origins, directions, first_point=True)
+        t = np.linalg.norm(intersections - origins[ray_indices],axis=1) / np.linalg.norm(directions[ray_indices], axis=1)
+        select = np.in1d(np.arange(indices.shape[0]), ray_indices[t < 1])
         visible = indices[~select]
         costMatrix = np.ones([points.shape[0], points.shape[0]]) * -1
         vertices = [Vertex(x=x[0], y=x[1], z=x[2], id=i, cost=np.inf) for i, x in enumerate(points)]
