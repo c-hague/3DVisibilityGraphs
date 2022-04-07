@@ -1,7 +1,7 @@
 from visibilitygraphs.dubinspath.dubinsCar import DubinsCar
 from visibilitygraphs.dubinspath.vanaAirplane import VanaAirplane
 from visibilitygraphs.models import Vertex
-from visibilitygraphs.plotting.helpers import dubinsCurve2d, vanaAirplaneCurve
+from visibilitygraphs.dubinspath.helpers import dubinsCurve2d, vanaAirplaneCurve
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d

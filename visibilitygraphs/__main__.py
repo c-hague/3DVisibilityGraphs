@@ -29,6 +29,7 @@ def main():
     parser.add_argument('--levels', default=4, type=int, help='type 1 number of z slices')
     parser.add_argument('--inflate', type=float, default=2, help='type 1 polygon inflation factor')
     parser.add_argument('-p', '--plot', type=bool, default=True, help='plot solution when finished')
+    parser.add_argument('--check', type=int, default=8, help='number of segments to decompose dubins path curves to when checking collisions')
     args = parser.parse_args()
 
     q0 = np.array([args.initial])
@@ -44,6 +45,7 @@ def main():
     builder = SolverBuilder()
     solver = builder.setType(args.type)\
         .setInflateFactor(args.inflate)\
+        .setCheckSegments(args.check)\
         .setLevelSets(args.levels).build()
     if not environment.is_all_triangles():
         raise ValueError(f'{fname} must be only be triangles')

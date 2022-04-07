@@ -55,9 +55,9 @@ def dubinsCurve2d(s: np.array, a, b, c, r, type: DubinsPathType):
     (float) -> np.ndarray
         path function where input goes from 0 to 1
     """
-    i = manueverToDir(type.name[0])
-    j = manueverToDir(type.name[1])
-    k = manueverToDir(type.name[2])
+    i = maneuverToDir(type.name[0])
+    j = maneuverToDir(type.name[1])
+    k = maneuverToDir(type.name[2])
     s1 = r * i * np.array([-np.sin(s[2]), np.cos(s[2])]) + s[:2] + r * np.array([np.cos(i * a / r + s[2] - i * np.pi / 2), np.sin(i * a / r + s[2] - i * np.pi / 2)])
     h1 = i * a / r + s[2]
     if j == 0:
@@ -74,10 +74,10 @@ def dubinsCurve2d(s: np.array, a, b, c, r, type: DubinsPathType):
             p1 = s[:2]
             p2 = r * np.array([np.cos(i * t / r + s[2] - i * np.pi / 2), np.sin(i * t / r + s[2] - i * np.pi / 2)])
             return p0 + p1 + p2
-        if t > a and t < a + b and j == 0:
+        if t >= a and t < a + b and j == 0:
             u = t - a
             return s1 + u * np.array([np.cos(h1), np.sin(h1)])
-        if t > a and t < a + b:
+        if t >= a and t < a + b:
             u = t - a
             p0 = r * j * np.array([-np.sin(h1), np.cos(h1)])
             p1 = s1
@@ -91,7 +91,7 @@ def dubinsCurve2d(s: np.array, a, b, c, r, type: DubinsPathType):
         
     return f
         
-def manueverToDir(str: str) -> int:
+def maneuverToDir(str: str) -> int:
     """
     maps dubins curve action to an interger {-1, 0, 1}
 

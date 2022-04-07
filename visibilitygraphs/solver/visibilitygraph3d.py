@@ -2,7 +2,7 @@ from typing import Callable
 from .helpers import polygonsFromMesh, inflatePolygon, heapUpdatePriority
 from .solver import Solver
 from visibilitygraphs.models import Vertex, DubinsPath
-from visibilitygraphs.dubinspath import VanaAirplane
+from visibilitygraphs.dubinspath import VanaAirplane, vanaAirplaneCurve, maneuverToDir
 import pyvista as pv
 import numpy as np
 import heapq
@@ -26,15 +26,17 @@ class VisibilityGraph3D(Solver):
     
     Methods
     -------
-    __init__(numLevelSets: int, inflateFactor: float, sampleDistance: float): VisibilityGraph3D
+    __init__(numLevelSets: int, inflateFactor: float, sampleDistance: float, checkSegments: int): VisibilityGraph3D
     solve(q0: ndarray, q1: ndarray, radius: float, flightAngle: float, environment: PolyData): list[DubinsPath]
-    branchAndBound(start: Vertex, end: Vertex, vertices: list[Vertex], costMatrix: ndarray, costFunction: Callable[[ndarray, ndarray], float]): list[Vertex]
+    aStar(start: Vertex, end: Vertex, vertices: list[Vertex], costMatrix: ndarray, costFunction: Callable[[ndarray, ndarray], float]): list[Vertex]
     findHeadings(vertices: list[Vertex], radius: float, flightAngle: float): list[Vertex]
     bisectAnglePerpendicular(a: Vertex, b: Vertex, c: Vertex, flightAngle)
     vectorAngle(vector: ndarray): tuple[[float, float]]
     makeGraph(start: ndarray, end: ndarray, environment: PolyData, levelSets: ndarray, inflateRadius: float, costFunction: Callable[[ndarray, ndarray], float]): tuple[list[Vertex], ndarray]
+    validPath(dubinsPath: DubinsPath, environment: PolyData): bool
+    collisionFree(environment: PolyData, y: ndarray): bool
     """
-    def __init__(self, numLevelSets: int, inflateFactor: float, sampleDistance: float):
+    def __init__(self, numLevelSets: int, inflateFactor: float, sampleDistance: float, checkSegments: int):
         """
         Parameters
         ----------
@@ -44,11 +46,14 @@ class VisibilityGraph3D(Solver):
             distance from obsticles / turn radius
         sampleDistance: float
             distance along level set polygons to sample
+        checkSegments: int
+            number of segments to check for dubins curve collisions
         """
         self.numLevelSets = numLevelSets
         self.inflateFactor = inflateFactor
         self.dubins = VanaAirplane()
         self.sampleDistance = sampleDistance
+        self.checkSegments = checkSegments
 
     def solve(self, q0: np.ndarray, q1: np.ndarray, radius: float, flightAngle: float, environment: pv.PolyData) -> 'list[DubinsPath]':
         """
@@ -353,8 +358,54 @@ class VisibilityGraph3D(Solver):
         bool
             true if path doesn't intersect with environment false if path intersects with environment
         """
-        #TODO figure out circle polygon raytracing algorithm to see if any paths collide with environment
+        a = np.array([dubinsPath.a, dubinsPath.b, dubinsPath.c])
+        a = a / np.sum(a)
+        b = np.array([dubinsPath.d, dubinsPath.e, dubinsPath.f])
+        b = b / np.sum(b)
+        start = 0
+        f = vanaAirplaneCurve(dubinsPath)
+        for i in range(3):
+            k = maneuverToDir(dubinsPath.type.name[i])
+            j = maneuverToDir(dubinsPath.type.name[i])
+            # curve
+            if np.abs(k) + np.abs(j) > 0:
+                end = np.clip(start + np.max([a[i], b[i]]),0, 1)
+                t = np.linspace(start, end, self.checkSegments)
+                y = np.array([f(s) for s in t])
+                if not self.collisionFree(environment, y):
+                    return False
+                start = end
+            # line segment
+            else:
+                end =  start + np.min([a[i], b[i]])
+                y = np.array([f(s) for s in [start, end]])
+                if not self.collisionFree(environment, y):
+                    return False
+                start = end
         return True
+    
+    def collisionFree(self, environment: pv.PolyData, y: np.ndarray) -> bool:
+        """
+        checks to see if the path is collision free
+
+        Parameters
+        ----------
+        environment: PolyData
+            environment for transversal
+        y: list[float]
+            path waypoints
+        
+        Returns
+        -------
+        bool
+            True if the path is collision free
+        """
+        origins = y[:-1]
+        directions = y[1:] - origins
+        intersections, ray_indices, _ = environment.multi_ray_trace(origins, directions, first_point=True)
+        t = np.linalg.norm(intersections - origins[ray_indices],axis=1) / np.linalg.norm(directions[ray_indices], axis=1)
+        select = np.in1d(np.arange(origins.shape[0]), ray_indices[t < 1])
+        return np.sum(select) <= 0
 
 class NoPathFoundException(Exception):
     """

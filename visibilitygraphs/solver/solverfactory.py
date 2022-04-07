@@ -32,6 +32,7 @@ class SolverBuilder(object):
         self._levelSets = 0
         self._inflateFactor = 2
         self._sampleDistance = 1
+        self._checkSegments = 8
     
     def setLevelSets(self, levelSets: int):
         """
@@ -83,6 +84,10 @@ class SolverBuilder(object):
         """
         self._sampleDistance = sampleDistance
         return self
+    
+    def setCheckSegments(self, checkSegments: int):
+        self._checkSegments = checkSegments
+        return self
 
     def setType(self, type: SolverType):
         """
@@ -116,7 +121,7 @@ class SolverBuilder(object):
         if self._type == SolverType.UNKNOWN:
             raise SolverBuilderException('cannot create solver with type SolverType.UNKNOWN')
         elif self._type == SolverType.VISIBILITY_GRAPH:
-            return VisibilityGraph3D(self._levelSets, self._inflateFactor, self._sampleDistance)
+            return VisibilityGraph3D(self._levelSets, self._inflateFactor, self._sampleDistance, self._checkSegments)
         else:
             raise SolverBuilderException(f'cannot create solver with type {self._type}')
 

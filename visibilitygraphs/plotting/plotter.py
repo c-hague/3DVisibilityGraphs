@@ -1,6 +1,6 @@
 import numpy as np
 import pyvista as pv
-from .helpers import vanaAirplaneCurve
+from visibilitygraphs.dubinspath import vanaAirplaneCurve
 from visibilitygraphs.models import DubinsPath
 """
 Authors
