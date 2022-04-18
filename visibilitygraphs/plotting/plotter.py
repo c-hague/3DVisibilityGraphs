@@ -1,12 +1,19 @@
 import numpy as np
 import pyvista as pv
 from visibilitygraphs.dubinspath import vanaAirplaneCurve
-from visibilitygraphs.models import DubinsPath
+from visibilitygraphs.models import DubinsPathFraction
+from enum import IntEnum
 """
 Authors
 -------
 Collin Hague : chague@uncc.edu
 """
+
+
+class PlotterType(IntEnum):
+    UNKNOWN = 0
+    DEFAULT = 1
+    FRACTION = 2
 
 
 class SolutionPlotter:
@@ -15,12 +22,12 @@ class SolutionPlotter:
 
     Methods
     -------
-    plotSolution(environment: PolyData, start: ndarray, end: ndarray, paths: list[DubinsPath])
+    plotSolution(environment: PolyData, start: ndarray, end: ndarray, paths: list[DubinsPathFraction])
     """
-    def __init__(self):
-        pass
+    def __init__(self, type):
+        self.type = type
 
-    def plotSolution(self, environment: pv.PolyData, start: np.ndarray, end: np.ndarray, paths: 'list[DubinsPath]'):
+    def plotSolution(self, environment: pv.PolyData, start: np.ndarray, end: np.ndarray, paths: 'list[DubinsPathFraction]'):
         """
         plots solution to path planning with object avoidance
 
@@ -40,7 +47,10 @@ class SolutionPlotter:
         for path in paths:
             poly = pv.PolyData()
             f = vanaAirplaneCurve(path)
-            t = np.linspace(0, 1, 100)
+            if self.type == PlotterType.DEFAULT:
+                t = np.linspace(0, 1, 100)
+            elif self.type == PlotterType.FRACTION:
+                t = np.linspace(0, path.fraction, 100)
             points = np.array([f(s) for s in t])    
             poly.points = points
             cells = np.full((len(points) - 1, 3), 2, dtype=np.int_)

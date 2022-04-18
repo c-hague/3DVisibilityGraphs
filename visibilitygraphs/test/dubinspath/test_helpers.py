@@ -1,6 +1,6 @@
 from visibilitygraphs.dubinspath.dubinsCar import DubinsCar
 from visibilitygraphs.dubinspath.vanaAirplane import VanaAirplane
-from visibilitygraphs.models import Vertex
+from visibilitygraphs.models import AStarVertex
 from visibilitygraphs.dubinspath.helpers import dubinsCurve2d, vanaAirplaneCurve
 import numpy as np
 import matplotlib.pyplot as plt
@@ -11,8 +11,8 @@ from mpl_toolkits import mplot3d
 def testDubinsCurve2dLSL():
     dubins = DubinsCar()
     path = dubins.calculatePath(
-        Vertex(x=0, y=0, psi=0),
-        Vertex(x=1, y=1, psi=np.pi / 2),
+        AStarVertex(x=0, y=0, psi=0),
+        AStarVertex(x=1, y=1, psi=np.pi / 2),
         .25
     )
     f = dubinsCurve2d([path.start.x, path.start.y, path.start.psi], path.a, path.b, path.c, path.r, path.type)
@@ -25,8 +25,8 @@ def testDubinsCurve2dLSL():
 def testDubinsCurve2dLSR():
     dubins = DubinsCar()
     path = dubins.calculatePath(
-        Vertex(x=0, y=0, psi=0),
-        Vertex(x=1, y=1, psi=0),
+        AStarVertex(x=0, y=0, psi=0),
+        AStarVertex(x=1, y=1, psi=0),
         .25
     )
     f = dubinsCurve2d([path.start.x, path.start.y, path.start.psi], path.a, path.b, path.c, path.r, path.type)
@@ -39,8 +39,8 @@ def testDubinsCurve2dLSR():
 def testDubinsCurve2dRSL():
     dubins = DubinsCar()
     path = dubins.calculatePath(
-        Vertex(x=0, y=0, psi=0),
-        Vertex(x=1, y=-1, psi=0),
+        AStarVertex(x=0, y=0, psi=0),
+        AStarVertex(x=1, y=-1, psi=0),
         .25
     )
     f = dubinsCurve2d([path.start.x, path.start.y, path.start.psi], path.a, path.b, path.c, path.r, path.type)
@@ -53,8 +53,8 @@ def testDubinsCurve2dRSL():
 def testDubinsCurve2dRSR():
     dubins = DubinsCar()
     path = dubins.calculatePath(
-        Vertex(x=0, y=0, psi=0),
-        Vertex(x=1, y=-1, psi=-np.pi/2),
+        AStarVertex(x=0, y=0, psi=0),
+        AStarVertex(x=1, y=-1, psi=-np.pi/2),
         .25
     )
     f = dubinsCurve2d([path.start.x, path.start.y, path.start.psi], path.a, path.b, path.c, path.r, path.type)
@@ -67,8 +67,8 @@ def testDubinsCurve2dRSR():
 def testDubinsCurve2dLRL():
     dubins = DubinsCar()
     path = dubins.calculatePath(
-        Vertex(x=0, y=0, psi=0),
-        Vertex(x=0, y=-.125, psi=np.pi),
+        AStarVertex(x=0, y=0, psi=0),
+        AStarVertex(x=0, y=-.125, psi=np.pi),
         .25
     )
     f = dubinsCurve2d([path.start.x, path.start.y, path.start.psi], path.a, path.b, path.c, path.r, path.type)
@@ -81,8 +81,8 @@ def testDubinsCurve2dLRL():
 def testDubinsCurve2dRLR():
     dubins = DubinsCar()
     path = dubins.calculatePath(
-        Vertex(x=0, y=0, psi=0),
-        Vertex(x=0, y=.125, psi=np.pi),
+        AStarVertex(x=0, y=0, psi=0),
+        AStarVertex(x=0, y=.125, psi=np.pi),
         .25
     )
     f = dubinsCurve2d([path.start.x, path.start.y, path.start.psi], path.a, path.b, path.c, path.r, path.type)
@@ -95,8 +95,8 @@ def testDubinsCurve2dRLR():
 def testVanaAirplaneCurve():
     dubins = VanaAirplane()
     path = dubins.calculatePath(
-        Vertex(x=0, y=0, z=0, psi=0, gamma=0),
-        Vertex(x=1, y=1, z=1, psi=0, gamma=0),
+        AStarVertex(x=0, y=0, z=0, psi=0, gamma=0),
+        AStarVertex(x=1, y=1, z=1, psi=0, gamma=0),
         .25,
         2 * np.pi / 9
     )

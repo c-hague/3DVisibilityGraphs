@@ -2,6 +2,7 @@ import numpy as np
 
 from .visibilitygraph3d import VisibilityGraph3D
 from .solver import Solver
+from .rrtSolver import RRTSolver
 
 """
 methods for creating solvers
@@ -16,6 +17,7 @@ class SolverType:
     """
     UNKNOWN = 0
     VISIBILITY_GRAPH = 1
+    RRT = 2
 
 
 class SolverBuilder(object):
@@ -33,6 +35,42 @@ class SolverBuilder(object):
         self._inflateFactor = 2
         self._sampleDistance = 1
         self._checkSegments = 8
+        self._numberPoints = 2000
+        self._goalRadius = 100
+    
+    def setNumberPoints(self, numberPoints: int):
+        """
+        set solver number of points for rrt
+        
+        Parameters
+        ----------
+        numberPoints: int
+            how many points to generate
+
+        Returns
+        -------
+        SolverBuilder
+            self for method chaining
+        """
+        self._numberPoints = numberPoints
+        return self
+    
+    def setGoalRadius(self, goalRadius: float):
+        """
+        set goal radius for rrt
+
+        Parameters
+        ----------
+        goalRadius: float
+            how close the rrt needs to get to goal
+
+        Returns
+        -------
+        SolverBuilder
+            self for method chaining
+        """
+        self._goalRadius = goalRadius
+        return self
     
     def setLevelSets(self, levelSets: int):
         """
@@ -122,6 +160,8 @@ class SolverBuilder(object):
             raise SolverBuilderException('cannot create solver with type SolverType.UNKNOWN')
         elif self._type == SolverType.VISIBILITY_GRAPH:
             return VisibilityGraph3D(self._levelSets, self._inflateFactor, self._sampleDistance, self._checkSegments)
+        elif self._type == SolverType.RRT:
+            return RRTSolver(self._numberPoints, self._checkSegments, self._goalRadius, self._sampleDistance)
         else:
             raise SolverBuilderException(f'cannot create solver with type {self._type}')
 

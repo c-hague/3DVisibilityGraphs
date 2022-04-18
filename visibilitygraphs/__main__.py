@@ -10,7 +10,7 @@ import argparse
 import numpy as np
 import pyvista as pv
 import os
-from .solver import SolverBuilder, NoPathFoundException
+from .solver import SolverBuilder, NoPathFoundException, SolverType
 from .plotting import SolutionPlotter
 
 def main():
@@ -33,6 +33,9 @@ def main():
     parser.add_argument('--inflate', type=float, default=2, help='type 1 polygon inflation factor')
     parser.add_argument('-p', '--plot', type=bool, default=True, help='plot solution when finished')
     parser.add_argument('--check', type=int, default=8, help='number of segments to decompose dubins path curves to when checking collisions')
+    parser.add_argument('--points', type=int, default=2000, help='number of points for algorithm')
+    parser.add_argument('--distance', type=float, default=100, help='path segment distance for rrt')
+    parser.add_argument('--rgoal', type=float, default=50, help='rrt goal radius')
     args = parser.parse_args()
 
     q0 = np.array([args.initial])
@@ -49,6 +52,9 @@ def main():
     solver = builder.setType(args.type)\
         .setInflateFactor(args.inflate)\
         .setCheckSegments(args.check)\
+        .setGoalRadius(args.rgoal)\
+        .setNumberPoints(args.points)\
+        .setSampleDistance(args.distance)\
         .setLevelSets(args.levels).build()
     if not environment.is_all_triangles():
         raise ValueError(f'{fname} must be only be triangles')
@@ -57,7 +63,7 @@ def main():
     except NoPathFoundException:
         solution = []
     if args.plot:
-        plotter = SolutionPlotter()
+        plotter = SolutionPlotter(args.type)
         plotter.plotSolution(environment, q0, q1, solution)
 
 

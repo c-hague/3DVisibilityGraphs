@@ -29,7 +29,7 @@ def vanaAirplaneCurve(path: DubinsPath) -> Callable[[float], np.ndarray]:
         sz = szFunction(t)
         return np.append(xy, sz[1])
     return f
-        
+
 
 def dubinsCurve2d(s: np.array, a, b, c, r, type: DubinsPathType):
     """

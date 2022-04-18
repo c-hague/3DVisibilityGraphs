@@ -1,7 +1,7 @@
 from typing import Callable
 from .helpers import polygonsFromMesh, inflatePolygon, heapUpdatePriority
 from .solver import Solver
-from visibilitygraphs.models import Vertex, DubinsPath
+from visibilitygraphs.models import AStarVertex, DubinsPath
 from visibilitygraphs.dubinspath import VanaAirplane, vanaAirplaneCurve, maneuverToDir
 import pyvista as pv
 import numpy as np
@@ -101,7 +101,7 @@ class VisibilityGraph3D(Solver):
         return paths
         
 
-    def aStar(self, start: Vertex, end: Vertex, vertices: 'list[Vertex]', costMatrix: np.ndarray, costFunction: 'Callable[[np.ndarray, np.ndarray], float]'):
+    def aStar(self, start: AStarVertex, end: AStarVertex, vertices: 'list[AStarVertex]', costMatrix: np.ndarray, costFunction: 'Callable[[np.ndarray, np.ndarray], float]'):
         """
         implementation of branch and bound algorithm for seaching for path from start to end
 
@@ -149,7 +149,7 @@ class VisibilityGraph3D(Solver):
             if vertex == end:
                 break
 
-        sequence: list[Vertex] = [end]
+        sequence: list[AStarVertex] = [end]
         current = end
         while current.parent is not None:
             current = current.parent
@@ -158,7 +158,7 @@ class VisibilityGraph3D(Solver):
         return sequence
 
 
-    def findHeadings(self, vertices: 'list[Vertex]', radius: float, flightAngle: float):
+    def findHeadings(self, vertices: 'list[AStarVertex]', radius: float, flightAngle: float):
         """
         uses angle bisector and alternating algorithms to find headings for dubins airplane
 
@@ -226,7 +226,7 @@ class VisibilityGraph3D(Solver):
                 state = 0
         return vertices
 
-    def bisectAnglePerpendicular(self, a: Vertex, b: Vertex, c: Vertex, flightAngle: float):
+    def bisectAnglePerpendicular(self, a: AStarVertex, b: AStarVertex, c: AStarVertex, flightAngle: float):
         """
         find angle bisectors between two points
 
@@ -336,7 +336,7 @@ class VisibilityGraph3D(Solver):
         select = np.in1d(np.arange(indices.shape[0]), ray_indices[t < 1])
         visible = indices[~select]
         costMatrix = np.ones([points.shape[0], points.shape[0]]) * -1
-        vertices = [Vertex(x=x[0], y=x[1], z=x[2], id=i, cost=np.inf) for i, x in enumerate(points)]
+        vertices = [AStarVertex(x=x[0], y=x[1], z=x[2], id=i, cost=np.inf) for i, x in enumerate(points)]
         for pair in visible:
             costMatrix[pair[0], pair[1]] = costFunction(points[pair[0], :], points[pair[1], :])
             costMatrix[pair[1], pair[0]] = costMatrix[pair[0], pair[1]]
