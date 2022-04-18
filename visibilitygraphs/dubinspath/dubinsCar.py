@@ -17,7 +17,7 @@ https://github.com/robotics-uncc/RobustDubins
 PATH_COMPARE_TOLERANCE = 1e-6
 POSSIBLE_A_ZERO = 1e-6
 HEADING_ALMOST_ZERO = 1e-6
-DEFAULT_DUBINS = (np.nan, np.nan, np.nan, np.Infinity, 0)
+DEFAULT_DUBINS = (np.nan, np.nan, np.nan, np.Infinity, DubinsPathType.UNKNOWN)
 
 
 class DubinsCar(object):

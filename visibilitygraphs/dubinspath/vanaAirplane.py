@@ -14,6 +14,7 @@ References
 
 
 APPROX_ZERO = .0001
+MAX_ITER = 1000
 
 
 # a, b, c, c*, d, e, f, cost, xyType, szType
@@ -45,11 +46,14 @@ class VanaAirplane(DubinsCar):
         """
         rHorizontal = r * 2
         xyEdge, szEdge = self.decoupled(q0, q1, r, rHorizontal, flightAngle)
-        while not self.isFeasible(szEdge, flightAngle):
+        i = 0
+        while not self.isFeasible(szEdge, flightAngle) and i < MAX_ITER:
             rHorizontal *= 2
             xyEdge, szEdge = self.decoupled(q0, q1, r, rHorizontal, flightAngle)
+            i += 1
         delta = .1 * r
-        while abs(delta) > APPROX_ZERO:
+        i = 0
+        while abs(delta) > APPROX_ZERO and i < MAX_ITER:
             rPrime = max(r, rHorizontal + delta)
             xyEdgePrime, szEdgePrime = self.decoupled(q0, q1, r, rPrime, flightAngle)
             if self.isFeasible(szEdgePrime, flightAngle) and szEdgePrime.cost < szEdge.cost:
@@ -59,6 +63,7 @@ class VanaAirplane(DubinsCar):
                 delta *= 2
             else:
                 delta = -.1 * delta
+            i += 1
         return DubinsPath(
             start=q0,
             end=q1,
@@ -127,3 +132,6 @@ class VanaAirplane(DubinsCar):
         if abs(szEdge.start.psi + szEdge.a / szEdge.r) >  flightAngle:
             return False
         return True
+
+class FailureToConvergeException(Exception):
+    pass

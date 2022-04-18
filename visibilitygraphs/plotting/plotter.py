@@ -50,8 +50,8 @@ class SolutionPlotter:
             if self.type == PlotterType.DEFAULT:
                 t = np.linspace(0, 1, 100)
             elif self.type == PlotterType.FRACTION:
-                t = np.linspace(0, path.fraction, 100)
-            points = np.array([f(s) for s in t])    
+                t = np.linspace(path.fstart, path.fend, 100)
+            points = np.array([f(s) for s in t])
             poly.points = points
             cells = np.full((len(points) - 1, 3), 2, dtype=np.int_)
             cells[:, 1] = np.arange(0, len(points) - 1, dtype=np.int_)

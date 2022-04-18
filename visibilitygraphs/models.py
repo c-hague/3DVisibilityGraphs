@@ -57,7 +57,8 @@ class DubinsPathFraction:
     zType: DubinsPathType = 0
     cost: float = 0
     n: int = 0
-    fraction: float = 1
+    fstart: float = 0
+    fend: float = 0
 
 @dataclass
 class Vertex:
@@ -80,7 +81,7 @@ class Vertex:
 
 
 @total_ordering
-@dataclass
+@dataclass(repr=False)
 class RRTVertex(Vertex):
     """class for vertex of a graph"""
     x: float = 0
@@ -91,7 +92,7 @@ class RRTVertex(Vertex):
     id: int = -1
     cost: float = 0
     parent: 'RRTVertex' = None
-    pathFromParent: DubinsPathFraction = None
+    pathFromParent: 'DubinsPathFraction' = None
 
     @staticmethod
     def fromList(a):
@@ -147,3 +148,12 @@ class AStarVertex(Vertex):
         if not isinstance(other, AStarVertex):
             return False
         return self.cost < other.cost
+
+def mapClass(obj: object, dataClass):
+    n = dataClass()
+    for item in obj.__annotations__:
+        for other in n.__annotations__:
+            if item == other:
+                setattr(n, item, getattr(obj, item))
+                break
+    return n
