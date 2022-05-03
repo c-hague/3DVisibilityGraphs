@@ -1,7 +1,8 @@
 # 3DVisibilityGraphs
 Project for ITCS 8151 at University of North Carolina at Charlotte. Finds the Dubins airplane path between two configuration while avoiding obstacles.
-## Installation 
-[Anaconda]("https://www.anaconda.com/") is used to install all required dependencies.
+## Installation
+Only runs on linux!
+[conda]("https://docs.conda.io/en/latest/") is used to install all required dependencies.
 Install dependencies with ``conda env create -f environment.yaml``.
 To run application first activate conda environment ``conda activate env``.
 To run application ``python -m visibilitygraphs --help``.
