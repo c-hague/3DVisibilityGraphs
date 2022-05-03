@@ -31,7 +31,7 @@ def main():
     parser.add_argument('-t', '--type', default=1, type=int, help='solver type 1-visibility graph')
     parser.add_argument('--levels', default=4, type=int, help='type 1 number of z slices')
     parser.add_argument('--inflate', type=float, default=2, help='type 1 polygon inflation factor')
-    parser.add_argument('-p', '--plot', type=bool, default=True, help='plot solution when finished')
+    parser.add_argument('-p', '--plot', type=bool, default=False, nargs='?', const=True, help='plot solution when finished')
     parser.add_argument('--check', type=int, default=8, help='number of segments to decompose dubins path curves to when checking collisions')
     parser.add_argument('--points', type=int, default=2000, help='number of points for algorithm')
     parser.add_argument('--distance', type=float, default=100, help='set sample distance')
