@@ -2,6 +2,7 @@
 Project for ITCS 8151 at University of North Carolina at Charlotte. Finds the Dubins airplane path between two configuration while avoiding obstacles.
 ## Installation
 Only runs on linux!
+One linux package required ``sudo apt install libgl1-mesa-glx``.
 [conda]("https://docs.conda.io/en/latest/") is used to install all required dependencies.
 Install dependencies with ``conda env create -f environment.yaml``.
 To run application first activate conda environment ``conda activate env``.
