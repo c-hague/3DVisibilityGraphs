@@ -143,6 +143,37 @@ def inflatePolygon(polygon: Polygon, radius: float) -> Polygon:
     
     return Polygon(shell=cleanedPoints).convex_hull
 
+def sampleEdge(polygon: Polygon, length: float) -> 'tuple[list[float], list[float]]':
+    """
+    creates a sample point around a polygon every length units
+
+    Parameters
+    ----------
+    polygon: Polygon
+        polygon to sample the edge of
+    length: float
+        length to sample around the polygon
+    
+    Returns
+    -------
+    tuple[list[float], list[float]]
+        x, y lists of points as tuple
+    """
+    s = 0
+    i = 0
+    points = np.array(polygon.exterior.xy).T[:-1, :]
+    samples = []
+    segments = np.reshape(np.concatenate([points, np.roll(points, 1, axis=0)], axis=1), [-1, 2, 2])
+    for segment in segments:
+        d = segment[1, :] - segment[0, :]
+        l = np.linalg.norm(d)
+        while s + l > i * length:
+            t = i * length - s
+            samples.append(d * t / l + segment[0, :])
+            i += 1
+        s += l
+    return list(map(lambda x: x[0], samples)), list(map(lambda x: x[1], samples))
+
 
 def heapUpdatePriority(heap:list, item):
     """

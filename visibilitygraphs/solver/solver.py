@@ -27,5 +27,17 @@ class Solver:
             min/max flight angle for aircraft
         environment : pv.PolyData
             environment for aircraft to transverse
+        
+        Raises
+        ------
+        NoPathFoundException 
+            raised when no path to goal is found
         """
+
         pass
+
+class NoPathFoundException(Exception):
+    """
+    Exception that is raise when to valid path between start and end is found
+    """
+    pass

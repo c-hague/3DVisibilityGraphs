@@ -1,6 +1,6 @@
 from typing import Callable
-from .helpers import polygonsFromMesh, inflatePolygon, heapUpdatePriority
-from .solver import Solver
+from .helpers import polygonsFromMesh, inflatePolygon, heapUpdatePriority, sampleEdge
+from .solver import Solver, NoPathFoundException
 from visibilitygraphs.models import AStarVertex, DubinsPath
 from visibilitygraphs.dubinspath import VanaAirplane, vanaAirplaneCurve, maneuverToDir
 import pyvista as pv
@@ -19,6 +19,7 @@ D’Amato, E., Notaro, I., Blasi, L., &#38; Mattei, M. (2019). Smooth path plann
 """
 
 APPROX_ZERO = .0001
+MAX_POLY_LENGTH = 1e6
 
 class VisibilityGraph3D(Solver):
     """
@@ -92,12 +93,10 @@ class VisibilityGraph3D(Solver):
                 path = self.dubins.calculatePath(s, e, radius, flightAngle)
 
                 if not self.validPath(path, environment):
-                    costMatrix[i - 1, i] = -1
-                    costMatrix[i, i - 1] = -1
+                    costMatrix[s.id, e.id] = -1
+                    costMatrix[e.id, s.id] = -1
                     validPath = False
-                else:
-                    paths.append(path)
-        
+                paths.append(path)
         return paths
         
 
@@ -237,7 +236,7 @@ class VisibilityGraph3D(Solver):
         b: Vertex
             middle point
         c: Vertex
-            last point
+            lastNoPathFoundException point
         fightAngle: float
 
         Returns
@@ -313,7 +312,10 @@ class VisibilityGraph3D(Solver):
         allZ = [start[2], end[2]]
         for j, polygons in enumerate(levels):
             for i in range(len(polygons)):
-                x, y = inflatePolygon(polygons[i], inflateRadius).exterior.xy
+                p = inflatePolygon(polygons[i], inflateRadius)
+                if p.exterior.length > MAX_POLY_LENGTH:
+                    continue
+                x, y = sampleEdge(p, self.sampleDistance)
                 allX += x
                 allY += y
                 allZ += [levelSets[j]] * len(y)
@@ -341,7 +343,7 @@ class VisibilityGraph3D(Solver):
             costMatrix[pair[0], pair[1]] = costFunction(points[pair[0], :], points[pair[1], :])
             costMatrix[pair[1], pair[0]] = costMatrix[pair[0], pair[1]]
         return vertices, costMatrix
-    
+
     def validPath(self, dubinsPath: DubinsPath, environment: pv.PolyData):
         """
         sees if a dubins path intersects with environment
@@ -358,6 +360,8 @@ class VisibilityGraph3D(Solver):
         bool
             true if path doesn't intersect with environment false if path intersects with environment
         """
+        if np.isinf(dubinsPath.cost):
+            return False
         a = np.array([dubinsPath.a, dubinsPath.b, dubinsPath.c])
         a = a / np.sum(a)
         b = np.array([dubinsPath.d, dubinsPath.e, dubinsPath.f])
@@ -406,9 +410,3 @@ class VisibilityGraph3D(Solver):
         t = np.linalg.norm(intersections - origins[ray_indices],axis=1) / np.linalg.norm(directions[ray_indices], axis=1)
         select = np.in1d(np.arange(origins.shape[0]), ray_indices[t < 1])
         return np.sum(select) <= 0
-
-class NoPathFoundException(Exception):
-    """
-    Exception that is raise when to valid path between start and end is found
-    """
-    pass

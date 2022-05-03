@@ -1,5 +1,5 @@
 from visibilitygraphs.dubinspath.vanaAirplane import FailureToConvergeException
-from .solver import Solver
+from .solver import Solver, NoPathFoundException
 import pyvista as pv
 import numpy as np
 from visibilitygraphs.models import DubinsPath, DubinsPathFraction, RRTVertex, mapClass
@@ -61,6 +61,7 @@ class RRTSolver(Solver):
             path = mapClass(path, DubinsPathFraction)
             frac = self.segmentDistance / path.cost
             path.fend = np.min([frac, 1])
+            path.cost *= (path.fend - path.fstart)
             parent = vertices[j]
             f = vanaAirplaneCurve(path)
                 
@@ -102,6 +103,7 @@ class RRTSolver(Solver):
                 path = mapClass(path, DubinsPathFraction)
                 path.fstart = path.fend
                 path.fend += frac
+                path.cost = (path.fend - path.fstart) * (path.d + path.e + path.f)
             k += 1
         
         current = vertices[0]
@@ -113,6 +115,7 @@ class RRTSolver(Solver):
         finalPath.reverse()
         
         if len(finalPath) <= 0:
+            raise NoPathFoundException("RRT Failed to Find Path")
             finalPath = [v.pathFromParent for v in vertices if v.parent is not None]
         
         return finalPath
@@ -133,7 +136,7 @@ class RRTSolver(Solver):
         bool
             true if path doesn't intersect with environment false if path intersects with environment
         """
-        if np.isinf(dubinsPath.cost):
+        if np.isinf(dubinsPath.cost) or np.isnan(dubinsPath.cost):
             return False
 
         a = np.array([dubinsPath.a, dubinsPath.b, dubinsPath.c])
